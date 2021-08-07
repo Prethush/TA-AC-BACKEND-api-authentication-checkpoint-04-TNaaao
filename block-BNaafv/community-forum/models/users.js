@@ -11,12 +11,14 @@ let userSchema = new Schema({
     name: {type: String, required: true},
     image: {type: String},
     bio: String,
+    role: String,
     passwd: {type: String, required: true, minlength: 5},
     following: Boolean,
     followingList: [{type: Schema.Types.ObjectId, ref: "User"}],
     followersList: [{type: Schema.Types.ObjectId, ref: "User"}],
     upvoteQuestionList: [{type: Schema.Types.ObjectId, ref: "Question"}],
-    upvoteAnswerList: [{type: Schema.Types.ObjectId, ref: "Answer"}]
+    upvoteAnswerList: [{type: Schema.Types.ObjectId, ref: "Answer"}],
+    isBlocked: Boolean
 }, {timestamps: true});
 
 userSchema.pre('save', async function(next) {
@@ -47,7 +49,7 @@ userSchema.methods.verifyPasswd = async function(passwd) {
 }
 
 userSchema.methods.signToken = async function() {
-    let payload = {userId: this.id, email: this.email, username: this.username};
+    let payload = {userId: this.id, email: this.email, username: this.username, role: this.role};
     try{
         let token = await jwt.sign(payload, process.env.SECRET);
         return token;
