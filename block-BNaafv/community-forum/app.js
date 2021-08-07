@@ -17,6 +17,7 @@ var profileRouter = require('./routes/profiles');
 var questionRouter = require('./routes/questions');
 var answerRouter = require('./routes/answers');
 var tagRouter = require('./routes/tags');
+var adminRouter = require('./routes/admin');
 
 var app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/profiles', profileRouter);
 app.use('/api/questions', questionRouter);
 app.use('/api/answers', answerRouter);
 app.use('/api/tags', tagRouter);
+app.use('/api/admin', adminRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

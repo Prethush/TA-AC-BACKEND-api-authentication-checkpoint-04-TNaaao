@@ -3,6 +3,7 @@ var router = express.Router();
 let User = require('../models/users');
 let auth = require('../middleware/auth');
 
+
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
@@ -10,6 +11,8 @@ router.get('/', function(req, res, next) {
 
 //register user
 router.post('/register', async (req, res, next) => {
+  req.body.user.isBlocked = false;
+  req.body.user.role = "user";
   try{
       let user = await User.create(req.body.user);
       let token = await user.signToken();
@@ -30,6 +33,9 @@ router.post('/login', async (req, res, next) => {
     if(!user) {
       return res.status(400).json({errors: {body: ["Email is not registered"]}});
     }
+    if(user.isBlocked){
+      return res.status(201).json({msg: "Your account is blocked by the Admin"});
+    }
     let result = await user.verifyPasswd(passwd);
     if(!result) {
       return res.status(400).json({errors: {body: ["Password is incorrect"]}});
@@ -40,6 +46,7 @@ router.post('/login', async (req, res, next) => {
     next(error);
   }
 });
+
 
 //get current user
 router.get('/current-user', auth.verifyToken, async(req, res, next) => {

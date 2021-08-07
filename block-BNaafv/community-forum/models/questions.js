@@ -19,7 +19,20 @@ questionSchema.methods.displayQuestionJSON = function(id = false){
     return {
         tags: this.tags,
         answers: this.answers.map(answer => answer.displayAnswerJSON(id)),
-        comments: this.comments.map(comment => comment.commentJSON(id)),
+        id: this.id,
+        title: this.title,
+        slug: this.slug,
+        description: this.description,
+        author: this.author.displayAuthor(id),
+        upvote: this.upvote,
+        createdAt: this.createdAt,
+        updatedAt: this.updatedAt
+    }
+}
+
+questionSchema.methods.displayQuestion = function(id = false){
+    return {
+        tags: this.tags,
         id: this.id,
         title: this.title,
         slug: this.slug,

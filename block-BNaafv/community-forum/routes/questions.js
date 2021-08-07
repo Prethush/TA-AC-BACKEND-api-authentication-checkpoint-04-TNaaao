@@ -12,9 +12,23 @@ router.post('/', auth.verifyToken, async (req, res, next) => {
     req.body.question.author = req.user.userId;
     try{
         let question = await Question.create(req.body.question);
-        question = await Question.findById(question.id).populate('author').populate({path: 'answers', populate: {path: 'author'}});
-        let user = await User.findByIdAndUpdate(req.user.userId, {$push: {questions: question.id}});
-        return res.status(201).json({question: question.displayQuestionJSON()});
+        question = await Question.findById(question.id).populate('author');
+        return res.status(201).json({question: question.displayQuestion(req.user.userId)});
+    }catch(error){
+        next(error);
+    }
+});
+
+//list a specific question
+router.get('/:slug', auth.authOptional, async (req, res, next) => {
+    let slug = req.params.slug;
+    try{
+        let question = await Question.findOne({slug});
+        if(!question){
+            return res.status(400).json({errors: {body: ["There is no result for your search"]}});
+        }
+        question = await Question.findById(question.id).populate([{path: 'author', model: 'User'}, {path: 'answers', model: 'Answer', populate: {path: 'author', model: 'User'}}]);
+        return res.status(201).json({question: question.displayQuestionJSON(req.user.userId)});
     }catch(error){
         next(error);
     }
@@ -24,11 +38,9 @@ router.post('/', auth.verifyToken, async (req, res, next) => {
 router.get('/', auth.authOptional, async (req, res, next) => {
     let id = req.user ? req.user.userId : false;
     try{
-        let questions = await Question.find({});
-        questions = await Question.find({}).populate('author').populate({path: 'answers', populate: {path: 'author'}}).populate({path: 'comments', populate: {path: 'author'}});
-        console.log(questions);
+        let questions = await Question.find({}).populate('author');
         return res.status(201).json({questions: questions.map(question => {
-            return question.displayQuestionJSON(id);
+            return question.displayQuestion(id);
         })});
        
     }catch(error) {
@@ -46,8 +58,8 @@ router.put('/:id', auth.verifyToken, async (req, res, next) => {
     try{
         let question = await Question.findById(id);
         if(req.user.userId == question.author){
-            question = await Question.findByIdAndUpdate(id, req.body.question).populate('author').populate({path: 'answers', populate: {path: 'author'}});
-            return res.status(201).json({question: question.displayQuestionJSON()});
+            question = await Question.findByIdAndUpdate(id, req.body.question).populate('author');
+            return res.status(201).json({question: question.displayQuestion(req.user.userId)});
         }else{
             return res.status(400).json({errors: {body: ["You don't have authorization to perform this task"]}}); 
         }
@@ -62,11 +74,14 @@ router.delete('/:slug', auth.verifyToken, async (req, res, next) => {
     console.log(slug);
     try{
         let question = await Question.findOne({slug});
+        if(!question) {
+            return res.status(400).json({errors: {body: ["There is no result for your search"]}});
+        }
         console.log(question);
         if(req.user.userId == question.author){
             question = await Question.findByIdAndDelete(question.id);
-            let Answer = await Answer.deleteMany({questionId: question.id});
-            return res.status(201).json({msg: "Qusetion is successfully deleted"});
+            let answer = await Answer.deleteMany({questionId: question.id});
+            return res.status(201).json({msg: "Question is successfully deleted"});
         }else {
             return res.status(400).json({errors: {body: ["You don't have authorization to perform this task"]}}); 
         }
@@ -117,9 +132,9 @@ router.post('/:id/upvote', auth.verifyToken, async (req, res, next) => {
         let user = await User.findById(req.user.userId);
         let question = await Question.findById(id);
         if(!user.upvoteQuestionList.includes(id)){
-            question = await Question.findByIdAndUpdate(id, {$inc: {upvote: 1}}).populate('author').populate({path: 'answers', populate: {path: 'author'}});
+            question = await Question.findByIdAndUpdate(id, {$inc: {upvote: 1}}).populate('author');
             user = await User.findByIdAndUpdate(user.id, {$push: {upvoteQuestionList: question.id}});
-            return res.status(201).json({question: question.displayQuestionJSON(user.id)});
+            return res.status(201).json({question: question.displayQuestion(user.id)});
         }else {
             return res.status(400).json({errors: {body: ["you are already voted for this question"]}});
         }

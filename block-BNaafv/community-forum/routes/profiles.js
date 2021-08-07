@@ -3,6 +3,7 @@ let router = express.Router();
 let auth = require('../middleware/auth');
 let User = require('../models/users');
 
+
 //profile info
 router.get('/:username', auth.authOptional, async (req, res, next) => {
     let username = req.params.username;
@@ -81,4 +82,6 @@ router.delete('/:username/follow', auth.verifyToken, async (req, res, next) => {
         next(error);
     }
 });
+
+
 module.exports = router;

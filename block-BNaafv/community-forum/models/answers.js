@@ -11,11 +11,11 @@ let answerSchema = new Schema({
 
 
 answerSchema.methods.displayAnswerJSON = function(id = null) {
+    
     return {
         id: this.id,
         text: this.text,
         author: this.author.displayAuthor(id),
-        comments: this.comments.map(comment => comment.commentJSON(id)),
         upvote: this.upvote,
         createdAt: this.createdAt,
         updatedAt: this.updatedAt
